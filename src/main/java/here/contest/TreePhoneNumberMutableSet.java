@@ -1,7 +1,9 @@
 package here.contest;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class TreePhoneNumberMutableSet implements PhoneNumberMutableSet {
 
@@ -36,29 +38,42 @@ public class TreePhoneNumberMutableSet implements PhoneNumberMutableSet {
 
         private final Node[] links = new Node[10];
 
-        synchronized Node createLink(int digit) {
-            if (links[digit] == null) {
-                links[digit] = new Node();
+        Node createLink(int digit) {
+            var node = links[digit];
+            if (node == null) {
+                synchronized (this) {
+                    node = links[digit];
+                    if (node == null) {
+                        links[digit] = node = new Node();
+                    }
+                }
             }
-            return traverse(digit);
+            return node;
         }
 
-        synchronized Node traverse(int digit) {
-            return links[digit];
+        Node traverse(int digit) {
+            var link = links[digit];
+            if (link != null) {
+                return link;
+            }
+            synchronized (this) {
+                return links[digit];
+            }
         }
 
         int countLinks(int currentDepth, int seekedDepth) {
             if (currentDepth == seekedDepth) {
                 return 1;
             }
-            return Arrays.stream(linksSnapshot())
-                .filter(Objects::nonNull)
+            Collection<Node> snapshot;
+            synchronized (this) {
+                snapshot = Arrays.stream(links)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            }
+            return snapshot.stream()
                 .mapToInt(link -> link.countLinks(currentDepth + 1, seekedDepth))
                 .sum();
-        }
-
-        private synchronized Node[] linksSnapshot() {
-            return links.clone();
         }
     }
 }

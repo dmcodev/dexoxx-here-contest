@@ -55,7 +55,7 @@ class TreePhoneNumberMutableSetSpec : StringSpec ({
         val numberOfPhoneNumbers = 100_000
 
         val phoneNumbers = generateRandomPhoneNumbers(numberOfPhoneNumbers)
-            // make sure there are at least small percent of duplicates
+            // make sure there is at least small percent of duplicates
             .let { it + generateSequence(it::random).take((it.size * 0.1).toInt()) }
         val phoneNumbersQueue = LinkedBlockingQueue(phoneNumbers)
         val uniquePhoneNumbers = phoneNumbers.distinct()
